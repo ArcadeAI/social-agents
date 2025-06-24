@@ -1,94 +1,62 @@
-from arcadepy import Arcade
-from dotenv import load_dotenv
-from utils.reddit import get_top_posts_metadata_in_subreddit, filter_posts, expand_posts, auth_tools
-import os
-import pprint
-from langchain_openai import ChatOpenAI
 import asyncio
-from pydantic import BaseModel, Field
-#load_dotenv()
+from datetime import datetime
+from parser_agents.reddit.agent import get_content, InputSchema
+from common.writers import write_documents_to_json
+import logging
 
-class OutputSchema(BaseModel):
-    post_ids: list[str] = Field(description="The list of post ids in order of best to worst")
-    reasoning: str = Field(description="The reasoning for the ranking")
-
-
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(name)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 async def main():
+    logger.info("Getting content for MCP subreddit")
 
-    await auth_tools(
-        os.getenv("USER_ID"),
-        ["Reddit.GetContentOfMultiplePosts",
-         "Reddit.GetPostsInSubreddit"])
-
-    posts = await get_top_posts_metadata_in_subreddit(subreddit="mcp", time_range="TODAY", limit=100)
-    posts = await filter_posts(posts, target_number=10)
-    posts = await expand_posts(posts)
-
-    subreddit = "mcp"
-    subreddit_description = open("subreddit_info.txt").read()
-
-    system_prompt_template = """
-    You are a helpful assistant that is an expert in identifying the BEST Reddit posts from any subreddit.
-    Your job is to rank the posts from best to worst.
-    The best post is the one that you think will get the most engagement (comments, upvotes, etc.).
-    Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.
-    Deprioritize posts that are obviously spam.
-
-    You will be given a subreddit and a list of posts from the subreddit.
-
-    The subreddit is "{subreddit}".
-
-    A detailed description of the subreddit is provided below.
-
-    <subreddit_description>
-    {subreddit_description}
-    </subreddit_description>
-
-    Here are 10 posts from the subreddit.
-
-    <posts>
-    {posts}
-    </posts>
-
-    """
-
-    few_shot_template = """
-    <post>
-    <id>
-    {id}
-    </id>
-    <title>
-    {title}
-    </title>
-    <body>
-    {body}
-    </body>
-    </post>
-    """
-
-    few_shot_examples = []
-    for post in posts:
-        few_shot_examples.append(
-            few_shot_template.format(
-                id=post['id'],
-                title=post['title'],
-                body=post['body']))
-
-    few_shot_examples = "\n".join(few_shot_examples)
-
-    system_prompt = system_prompt_template.format(
-        subreddit=subreddit,
-        subreddit_description=subreddit_description,
-        posts=few_shot_examples)
-
-    agent = ChatOpenAI(
-        model="gpt-4o-2024-08-06",
-    )
-    agent = agent.with_structured_output(OutputSchema)
-
-    response = agent.invoke([{"role": "system", "content": system_prompt}])
-    print(response)
+    today = datetime.now().strftime("%Y-%m-%d")
+    subreddits_to_process = [
+        InputSchema( subreddit="mcp", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
+            subreddit_description=open("./input_sources/reddit/mcp/subreddit_info.txt").read(),
+        ),
+        InputSchema( subreddit="modelcontextprotocol", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
+            subreddit_description=open("./input_sources/reddit/mcp/subreddit_info.txt").read(),
+        ),
+        InputSchema( subreddit="AgentsOfAI", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
+            subreddit_description=open("./input_sources/reddit/AgentsOfAI/subreddit_info.txt").read(),
+        ),
+        InputSchema( subreddit="Anthropic", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
+            subreddit_description=open("./input_sources/reddit/Anthropic/subreddit_info.txt").read(),
+        ),
+        InputSchema( subreddit="AI_Agents", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
+            subreddit_description=open("./input_sources/reddit/AI_Agents/subreddit_info.txt").read(),
+        ),
+        InputSchema( subreddit="aiagents", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
+            subreddit_description=open("./input_sources/reddit/aiagents/subreddit_info.txt").read(),
+        ),
+        InputSchema( subreddit="agentdevelopmentkit", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
+            subreddit_description=open("./input_sources/reddit/agentdevelopmentkit/subreddit_info.txt").read(),
+        ),
+        InputSchema( subreddit="LLMDevs", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
+            subreddit_description=open("./input_sources/reddit/LLMDevs/subreddit_info.txt").read(),
+        ),
+        InputSchema( subreddit="LangChain", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
+            subreddit_description=open("./input_sources/reddit/langchain/subreddit_info.txt").read(),
+        ),
+        InputSchema( subreddit="PydanticAI", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
+            subreddit_description=open("./input_sources/reddit/PydanticAI/subreddit_info.txt").read(),
+        ),
+    ]
+    for subreddit in subreddits_to_process:
+        try:
+            content = await get_content(
+                parser_agent_config=subreddit
+            )
+            logger.info(f"Writing content for {subreddit.subreddit} subreddit")
+            write_documents_to_json(content, f"output_data/{today}/reddit-{subreddit.subreddit}_content.json")
+        except RuntimeError as e:
+            logger.error(f"Error getting content for {subreddit.subreddit} subreddit: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())

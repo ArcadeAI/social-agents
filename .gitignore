@@ -11,3 +11,8 @@ wheels/
 
 # Environment variables
 .env
+
+output_data/
+input_sources/
+
+.vscode/

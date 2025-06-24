@@ -1,14 +1,12 @@
 from arcadepy import AsyncArcade
-from dotenv import load_dotenv
+from datetime import datetime
 import os
 from typing import List
-import pprint
-import asyncio
-load_dotenv()
+from common.schemas import Document, DocumentType, DocumentCategory, ContentType
 
-client = AsyncArcade()
 
 async def get_top_posts_metadata_in_subreddit(
+    client: AsyncArcade,
     subreddit: str,
     time_range: str = "TODAY",
     limit: int = 100,
@@ -16,7 +14,6 @@ async def get_top_posts_metadata_in_subreddit(
 
     async def get_posts_metadata(cursor: str = None) -> dict:
         tool_input = {
-            #"cursor": cursor,
             "subreddit": subreddit,
             "listing": "top",
             "time_range": time_range,
@@ -52,7 +49,10 @@ async def get_top_posts_metadata_in_subreddit(
 
 
 
-async def filter_posts(posts: List[dict], target_number: int = 10) -> List[dict]:
+async def filter_posts(
+    posts: List[dict],
+    target_number: int = 10
+) -> List[dict]:
     """
     Filter posts to only include the top target_number of posts.
 
@@ -68,7 +68,10 @@ async def filter_posts(posts: List[dict], target_number: int = 10) -> List[dict]
     return posts[:target_number]
 
 
-async def expand_posts(posts: List[dict]) -> List[dict]:
+async def expand_posts(
+    client: AsyncArcade,
+    posts: List[dict]
+) -> List[dict]:
     """
     Expand posts to include the full text of the post.
     """
@@ -86,29 +89,35 @@ async def expand_posts(posts: List[dict]) -> List[dict]:
     return expanded_posts.output.value["posts"]
 
 
-async def auth_tools(user_id: str, tool_names: List[str]):
-    # collect the scopes for every tool I want to use
-    scopes = set()
-    tools = []
-    if tool_names:
-        tasks = [client.tools.get(name=tool_id) for tool_id in tool_names]
-        responses = await asyncio.gather(*tasks)
-        for response in responses:
-            tools.append(response)
+async def translate_items(
+    posts: List[dict],
+    ordered_ids: List[str],
+    document_categories: List[DocumentCategory],
+) -> List[Document]:
+    """
+    Translate posts to documents.
+    """
+    documents = []
+    post_id_to_category = {post_id: category
+                           for post_id, category in
+                           zip(ordered_ids, document_categories)}
 
-    # collect the scopes
-    scopes = set()
-    for tool in tools:
-        if tool.requirements.authorization.oauth2.scopes:
-            scopes |= set(tool.requirements.authorization.oauth2.scopes)
-
-    # start auth
-    auth_response = await client.auth.start(user_id=os.getenv("USER_ID"),
-                                            scopes=list(scopes),
-                                            provider="reddit")
-
-    # show the url to the user if needed
-    if auth_response.status != "complete":
-        print(f"Please click here to authorize: {auth_response.url}")
-        # Wait for the authorization to complete
-        await client.auth.wait_for_completion(auth_response)
+    for post in posts:
+        document_category = post_id_to_category[post["id"]]
+        documents.append(Document(
+            url=f'https://www.reddit.com{post["permalink"]}',
+            type=ContentType.REDDIT,
+            category=document_category,
+            file_type=DocumentType.MARKDOWN,
+            title=post["title"],
+            author=post["author"],
+            date_published=datetime.fromtimestamp(post["created_utc"]),
+            content=post["body"],
+            metadata={
+                "subreddit": post["subreddit"],
+                "upvotes": post["upvotes"],
+                "num_comments": post["num_comments"],
+                "url": post["url"],
+            }
+        ))
+    return documents
