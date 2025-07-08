@@ -1,11 +1,11 @@
 from common.partials import DOCUMENT_CATEGORY_PARTIAL
 from common.schemas import Document, DocumentCategory
 from common.utils import auth_tools
+from common.llm_provider_setup import get_llm
 from parser_agents.reddit.tools import (
     get_top_posts_metadata_in_subreddit,
     filter_posts, expand_posts, translate_items)
 import os
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 from typing import List
 from arcadepy import AsyncArcade
@@ -121,9 +121,9 @@ async def get_content(parser_agent_config: InputSchema) -> List[Document]:
         subreddit_description=subreddit_description,
         posts=few_shot_examples)
 
-    # TODO(Mateo): Implement simple model selection logic
-    agent = ChatOpenAI(
-        model=os.getenv("OPENAI_MODEL", "gpt-4o-2024-08-06"),
+    agent = get_llm(
+        provider=os.getenv("LLM_PROVIDER", "openai"),
+        model=os.getenv("LLM_MODEL", "gpt-4o-2024-08-06"),
     )
     agent = agent.with_structured_output(OutputSchema)
 

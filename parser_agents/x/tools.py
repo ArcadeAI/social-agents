@@ -3,53 +3,58 @@ from datetime import datetime
 import os
 from typing import List
 from common.schemas import Document, DocumentType, DocumentCategory, ContentType
+from parser_agents.x.schemas import SearchType
+from pprint import pprint
+from time import sleep
 
-
-async def get_top_posts_metadata_in_subreddit(
+async def search_tweets(
     client: AsyncArcade,
-    subreddit: str,
-    time_range: str = "TODAY",
+    search_type: SearchType,
+    search_query: str,
+    audience_specification: str,
     limit: int = 100,
+    target_number: int = 300,
 ) -> List[dict]:
 
-    async def get_posts_metadata(cursor: str = None) -> dict:
+    async def get_tweets(next_token: str = None) -> dict:
+        print(f"Getting tweets for {search_query} with next_token {next_token}")
         tool_input = {
-            "subreddit": subreddit,
-            "listing": "top",
-            "time_range": time_range,
-            "limit": limit,
+            "keywords": [search_query],
+            "max_results": limit,
         }
 
-        if cursor is not None:
-            tool_input["cursor"] = cursor
+        if next_token is not None:
+            tool_input["next_token"] = next_token
 
         return await client.tools.execute(
-            tool_name="Reddit.GetPostsInSubreddit",
+            tool_name="X.SearchRecentTweetsByKeywords",
             input=tool_input,
             user_id=os.getenv("USER_ID"),
         )
 
-    posts = []
+    tweets = []
 
-    response = await get_posts_metadata()
+    response = await get_tweets()
     try:
-        posts.extend(response.output.value["posts"])
+        tweets.extend(response.output.value["data"])
     except TypeError as e:
         print(e)
         print(response)
         exit(1)
 
-    cursor = response.output.value["cursor"]
-    while cursor is not None:
-        response = await get_posts_metadata(cursor=cursor)
-        posts.extend(response.output.value["posts"])
-        cursor = response.output.value["cursor"]
+    next_token = response.output.value["meta"]["next_token"]
+    while next_token is not None and len(tweets) < target_number:
+        sleep(1)
+        response = await get_tweets(next_token=next_token)
+        pprint(response)
+        tweets.extend(response.output.value["data"])
+        next_token = response.output.value["meta"]["next_token"]
 
-    return posts
+    return tweets
 
 
 
-async def filter_posts(
+async def filter_tweets(
     posts: List[dict],
     target_number: int = 10
 ) -> List[dict]:
@@ -121,6 +126,3 @@ async def translate_items(
             }
         ))
     return documents
-
-
-
