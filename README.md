@@ -9,4 +9,4 @@ the concerns into multiple smaller, composable agents.
 # DevLog
 
 ## 2025-06-17 - Starting the Reddit Agent
-We used [The Reddit Toolkit](https://docs.arcade.dev/toolkits/social-communication/reddit) to gather and rank the top 10 posts from a subreddit. We sort the posts manually based on the engagement metrics, and the use LangChain to prioritize the posts based on how relevant they are for developers.
+We used [The Reddit Toolkit](https://docs.arcade.dev/toolkits/social-communication/reddit) to gather and rank the top 10 posts from a subreddit. We sort the posts manually based on the engagement metrics, and the use LangChain to prioritize the posts based on how relevant they are for developers. 

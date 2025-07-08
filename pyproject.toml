@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-api = "api.main:app"
+api = "stream_agent.api.main:app"
 
 [build-system]
 requires = ["hatchling"]
