@@ -20,37 +20,37 @@ async def main_reddit():
     today = datetime.now().strftime("%Y-%m-%d")
     subreddits_to_process = [
         reddit_agent.InputSchema( subreddit="mcp", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
-            subreddit_description=open("./input_sources/reddit/mcp/subreddit_info.txt").read(),
+            subreddit_description=open("stream_agent/input_sources/reddit/mcp/subreddit_info.txt").read(),
         ),
         reddit_agent.InputSchema( subreddit="modelcontextprotocol", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
-            subreddit_description=open("./input_sources/reddit/mcp/subreddit_info.txt").read(),
+            subreddit_description=open("stream_agent/input_sources/reddit/mcp/subreddit_info.txt").read(),
         ),
         reddit_agent.InputSchema( subreddit="AgentsOfAI", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
-            subreddit_description=open("./input_sources/reddit/AgentsOfAI/subreddit_info.txt").read(),
+            subreddit_description=open("stream_agent/input_sources/reddit/AgentsOfAI/subreddit_info.txt").read(),
         ),
         reddit_agent.InputSchema( subreddit="Anthropic", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
-            subreddit_description=open("./input_sources/reddit/Anthropic/subreddit_info.txt").read(),
+            subreddit_description=open("stream_agent/input_sources/reddit/Anthropic/subreddit_info.txt").read(),
         ),
         reddit_agent.InputSchema( subreddit="AI_Agents", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
-            subreddit_description=open("./input_sources/reddit/AI_Agents/subreddit_info.txt").read(),
+            subreddit_description=open("stream_agent/input_sources/reddit/AI_Agents/subreddit_info.txt").read(),
         ),
         reddit_agent.InputSchema( subreddit="aiagents", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
-            subreddit_description=open("./input_sources/reddit/aiagents/subreddit_info.txt").read(),
+            subreddit_description=open("stream_agent/input_sources/reddit/aiagents/subreddit_info.txt").read(),
         ),
         reddit_agent.InputSchema( subreddit="agentdevelopmentkit", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
-            subreddit_description=open("./input_sources/reddit/agentdevelopmentkit/subreddit_info.txt").read(),
+            subreddit_description=open("stream_agent/input_sources/reddit/agentdevelopmentkit/subreddit_info.txt").read(),
         ),
         reddit_agent.InputSchema( subreddit="LLMDevs", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
-            subreddit_description=open("./input_sources/reddit/LLMDevs/subreddit_info.txt").read(),
+            subreddit_description=open("stream_agent/input_sources/reddit/LLMDevs/subreddit_info.txt").read(),
         ),
         reddit_agent.InputSchema( subreddit="LangChain", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
-            subreddit_description=open("./input_sources/reddit/langchain/subreddit_info.txt").read(),
+            subreddit_description=open("stream_agent/input_sources/reddit/langchain/subreddit_info.txt").read(),
         ),
         reddit_agent.InputSchema( subreddit="PydanticAI", time_range="TODAY", limit=100, target_number=10, audience_specification="Deprioritize posts that are obviously marketing oriented, everyone is trying to sell something, we want developer-oriented content instead.",
-            subreddit_description=open("./input_sources/reddit/PydanticAI/subreddit_info.txt").read(),
+            subreddit_description=open("stream_agent/input_sources/reddit/PydanticAI/subreddit_info.txt").read(),
         ),
     ]
-    for subreddit in subreddits_to_process:
+    for subreddit in subreddits_to_process[:1]:
         try:
             content = await reddit_agent.get_content(
                 parser_agent_config=subreddit
@@ -77,4 +77,4 @@ async def main_x():
         except RuntimeError as e:
             logger.error(f"Error getting content for {topic.search_query} twitter: {e}")
 if __name__ == "__main__":
-    asyncio.run(main_x())
+    asyncio.run(main_reddit())

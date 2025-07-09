@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Any
-from pydantic import BaseModel, Field
-from common.schemas import DocumentCategory
+from typing import Any, Optional
+from pydantic import BaseModel, Field, EmailStr
+from stream_agent.common.schemas import DocumentCategory
 
 
 class AIGeneratedComment(BaseModel):
@@ -29,3 +29,37 @@ class SubredditConfig(BaseModel):
     subreddit_description: str = Field(description="Description of the subreddit")
     active: bool = Field(default=True, description="Whether this subreddit is active for processing")
     created_at: datetime = Field(default_factory=datetime.now, description="When the subreddit was added")
+
+
+# Authentication Schemas
+class UserCreate(BaseModel):
+    """Schema for user registration."""
+    username: str = Field(min_length=3, max_length=50, description="Username")
+    email: EmailStr = Field(description="Email address")
+    password: str = Field(min_length=8, description="Password")
+
+
+class UserLogin(BaseModel):
+    """Schema for user login."""
+    username: str = Field(description="Username")
+    password: str = Field(description="Password")
+
+
+class User(BaseModel):
+    """Schema for user information."""
+    id: str = Field(description="Unique user identifier")
+    username: str = Field(description="Username")
+    email: EmailStr = Field(description="Email address")
+    is_active: bool = Field(default=True, description="Whether the user is active")
+    created_at: datetime = Field(default_factory=datetime.now, description="When the user was created")
+
+
+class Token(BaseModel):
+    """Schema for authentication token."""
+    access_token: str = Field(description="JWT access token")
+    token_type: str = Field(default="bearer", description="Token type")
+
+
+class TokenData(BaseModel):
+    """Schema for token data."""
+    username: Optional[str] = None

@@ -15,10 +15,19 @@ dependencies = [
     "langchain-core",
     "langchain-openai",
     "langchain-anthropic",
+    "arcade-ai>=2.0.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "email-validator>=2.0.0",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.10.0",
 ]
 
 [project.scripts]
 api = "stream_agent.api.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["stream_agent"]
 
 [build-system]
 requires = ["hatchling"]
